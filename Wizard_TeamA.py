@@ -12,6 +12,9 @@ class Wizard_TeamA(Character):
 
         Character.__init__(self, world, "wizard", image)
 
+        self.graph = Graph(self)
+        self.generate_pathfinding_graphs("pathfinding_graph_wizard_Anything.txt")
+
         self.projectile_image = projectile_image
         self.explosion_image = explosion_image
 
@@ -71,7 +74,7 @@ class Wizard_TeamA(Character):
 
         return furthest
 
-    # def get_nearest_obstacle(self):
+    # def collide_obstacle(self):
 
     #     for entity in self.world.entities.values():
 
@@ -82,17 +85,73 @@ class Wizard_TeamA(Character):
     #                 if collide_e.name == "obstacle":
     #                     self.velocity = 
 
-    def get_enemy_base(self, id):
+    def get_enemy_structure(self, team_id):
 
-        enemy_base = None
+        enemy_structure = None
 
         for entity in self.world.entities.values():
 
-            if 1 - entity.team_id == id:
-                 enemy_base = entity
+            # if nearest_opponent is None:
+            #     nearest_opponent = entity
+            #     distance = (char.position - entity.position).length()
+            # else:
+            #     if distance > (char.position - entity.position).length():
+            #         distance = (char.position - entity.position).length()
+            #         nearest_opponent = entity
+            if 1 - entity.team_id == team_id:
+                 enemy_structure = entity
                  break
         
-        return enemy_base
+        return enemy_structure
+    
+    # --- Reads a set of pathfinding graphs from a file ---
+    def generate_pathfinding_graphs(self, filename):
+
+        f = open(filename, "r")
+
+        # Create the nodes
+        line = f.readline()
+        while line != "connections\n":
+            data = line.split()
+            self.graph.nodes[int(data[0])] = Node(self.graph, int(data[0]), int(data[1]), int(data[2]))
+            line = f.readline()
+
+        # Create the connections
+        line = f.readline()
+        while line != "paths\n":
+            data = line.split()
+            node0 = int(data[0])
+            node1 = int(data[1])
+            distance = (Vector2(self.graph.nodes[node0].position) - Vector2(self.graph.nodes[node1].position)).length()
+            self.graph.nodes[node0].addConnection(self.graph.nodes[node1], distance)
+            self.graph.nodes[node1].addConnection(self.graph.nodes[node0], distance)
+            line = f.readline()
+
+        # Create the orc paths, which are also Graphs
+        self.paths = []
+        line = f.readline()
+        while line != "":
+            path = Graph(self)
+            data = line.split()
+            
+            # Create the nodes
+            for i in range(0, len(data)):
+                node = self.graph.nodes[int(data[i])]
+                path.nodes[int(data[i])] = Node(path, int(data[i]), node.position[0], node.position[1])
+
+            # Create the connections
+            for i in range(0, len(data)-1):
+                node0 = int(data[i])
+                node1 = int(data[i + 1])
+                distance = (Vector2(self.graph.nodes[node0].position) - Vector2(self.graph.nodes[node1].position)).length()
+                path.nodes[node0].addConnection(path.nodes[node1], distance)
+                path.nodes[node1].addConnection(path.nodes[node0], distance)
+                
+            self.paths.append(path)
+
+            line = f.readline()
+
+        f.close()
 
 
 class WizardStateSeeking_TeamA(State):
@@ -102,7 +161,7 @@ class WizardStateSeeking_TeamA(State):
         State.__init__(self, "seeking")
         self.wizard = wizard
 
-        self.wizard.path_graph = self.wizard.world.paths[randint(0, len(self.wizard.world.paths)-1)]
+        self.wizard.path_graph = self.wizard.paths[randint(0, len(self.wizard.paths)-1)]
         
 
     def do_actions(self):
@@ -140,6 +199,7 @@ class WizardStateSeeking_TeamA(State):
                 return "fleeing"
             if (nearest_opponent.name == "tower" or nearest_opponent.name == "base") and opponent_distance <= self.wizard.min_target_distance:
                 self.wizard.target = nearest_opponent
+                self.wizard.velocity = Vector2(0, 0)
                 return "attacking"
             
         return None
@@ -163,7 +223,7 @@ class WizardStateSeeking_TeamA(State):
             self.wizard.move_target.position = self.path[0].fromNode.position
 
         else:
-            self.wizard.move_target.position = self.wizard.path_graph.nodes[self.wizard.base.spawn_node_index].position
+            self.wizard.move_target.position = self.wizard.path_graph.nodes[self.wizard.base.target_node_index].position
 
 class WizardStateAttacking_TeamA(State):
 
@@ -178,7 +238,7 @@ class WizardStateAttacking_TeamA(State):
 
         # opponent within range
         if opponent_distance <= self.wizard.min_target_distance:
-            if randint(1, 20) == 1:
+            if randint(1, 12) == 1:
                 rand_pos_x = [(self.wizard.position.x - randint(15, 20)), (self.wizard.position.x + randint(15, 20))]
                 rand_pos_y = [(self.wizard.position.y - randint(15, 20)), (self.wizard.position.y + randint(15, 20))]
                 self.wizard.velocity = Vector2(rand_pos_x[randint(0, 1)], rand_pos_y[randint(0, 1)]) - self.wizard.position
@@ -187,13 +247,8 @@ class WizardStateAttacking_TeamA(State):
                 self.wizard.velocity.normalize_ip();
                 self.wizard.velocity *= self.wizard.maxSpeed
 
-            enemy_base = self.wizard.get_enemy_base(self.wizard.team_id)
-            nearest_node = self.wizard.path_graph.get_nearest_node(enemy_base.position)
-            if (nearest_node.position - self.wizard.position).length() < self.wizard.min_target_distance*0.5:
-                self.wizard.velocity = Vector2(0, 0)
-
             if self.wizard.current_ranged_cooldown <= 0:
-                self.wizard.ranged_attack(nearest_node.position, self.wizard.explosion_image)
+                self.wizard.ranged_attack(self.wizard.world.graph.nodes[self.wizard.base.target_node_index].position, self.wizard.explosion_image)
 
     def check_conditions(self):
 
@@ -201,14 +256,14 @@ class WizardStateAttacking_TeamA(State):
 
         # target is gone
         if self.wizard.world.get(self.wizard.target.id) is None or self.wizard.target.ko:
-            return "seeking"
-
-        if opponent_distance > self.wizard.min_target_distance:
-            return "seeking"
+            return "fleeing"
 
         # if (self.wizard.move_target.position - self.wizard.position).length() < 8:
         #     self.wizard.velocity = Vector2(0, 0)
         #     return "seeking"
+
+        if opponent_distance > self.wizard.min_target_distance:
+            return "seeking"
 
         nearest_opponent = self.wizard.world.get_nearest_opponent(self.wizard)
         if nearest_opponent is not None:
@@ -229,16 +284,16 @@ class WizardStateFleeing_TeamA(State):
         State.__init__(self, "fleeing")
         self.wizard = wizard
 
-        self.wizard.path_graph = self.wizard.world.paths[randint(0, len(self.wizard.world.paths)-1)]
+        self.wizard.path_graph = self.wizard.paths[randint(0, len(self.wizard.paths)-1)]
         
 
     def do_actions(self):
 
-        if randint(1, 20) == 1:
-            rand_pos_x = [(self.wizard.move_target.position[0] - randint(20, 30)), (self.wizard.move_target.position[0] + randint(20, 30))]
-            rand_pos_y = [(self.wizard.move_target.position[1] - randint(20, 30)), (self.wizard.move_target.position[1] + randint(20, 30))]
-            self.wizard.velocity = Vector2(rand_pos_x[randint(0, 1)], rand_pos_y[randint(0, 1)]) - self.wizard.position
-        #self.wizard.velocity = self.wizard.move_target.position - self.wizard.position
+        # if randint(1, 20) == 1:
+        #     rand_pos_x = [(self.wizard.move_target.position[0] - randint(20, 30)), (self.wizard.move_target.position[0] + randint(20, 30))]
+        #     rand_pos_y = [(self.wizard.move_target.position[1] - randint(20, 30)), (self.wizard.move_target.position[1] + randint(20, 30))]
+        #     self.wizard.velocity = Vector2(rand_pos_x[randint(0, 1)], rand_pos_y[randint(0, 1)]) - self.wizard.position
+        self.wizard.velocity = self.wizard.move_target.position - self.wizard.position
         if self.wizard.velocity.length() > 0:
             self.wizard.velocity.normalize_ip();
             self.wizard.velocity *= self.wizard.maxSpeed 
@@ -272,9 +327,14 @@ class WizardStateFleeing_TeamA(State):
         nearest_node = self.wizard.path_graph.get_nearest_node(self.wizard.position)
         furthest_node = self.wizard.get_furthest_node(self.wizard.position)
 
-        self.path = pathFindAStar(self.wizard.path_graph, \
-                                  nearest_node, \
-                                  furthest_node)
+        if nearest_node == self.wizard.path_graph.nodes[self.wizard.base.spawn_node_index]:
+            self.path = pathFindAStar(self.wizard.path_graph, \
+                                    nearest_node, \
+                                    furthest_node)
+        else:
+            self.path = pathFindAStar(self.wizard.path_graph, \
+                                    nearest_node, \
+                                    self.wizard.path_graph.nodes[self.wizard.base.spawn_node_index])
 
         
         self.path_length = len(self.path)
@@ -282,11 +342,11 @@ class WizardStateFleeing_TeamA(State):
         if (self.path_length > 1):
             self.current_connection = 0
             self.wizard.move_target.position = self.path[1].fromNode.position
-        elif (self.path_length > 0):
+        if (self.path_length > 0):
             self.current_connection = 0
             self.wizard.move_target.position = self.path[0].fromNode.position
         else:
-            self.wizard.move_target.position = furthest_node
+            self.wizard.move_target.position = self.wizard.path_graph.nodes[self.wizard.base.spawn_node_index]
 
 class WizardStateKO_TeamA(State):
 
@@ -306,7 +366,7 @@ class WizardStateKO_TeamA(State):
         if self.wizard.current_respawn_time <= 0:
             self.wizard.current_respawn_time = self.wizard.respawn_time
             self.wizard.ko = False
-            self.wizard.path_graph = self.wizard.world.paths[randint(0, len(self.wizard.world.paths)-1)]
+            self.wizard.path_graph = self.wizard.paths[randint(0, len(self.wizard.paths)-1)]
             return "seeking"
             
         return None
