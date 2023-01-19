@@ -6,6 +6,8 @@ from Graph import *
 from Character import *
 from State import *
 
+from Functions_Anything import *
+
 class Archer_TeamA(Character):
 
     def __init__(self, world, image, projectile_image, base, position):
@@ -13,6 +15,9 @@ class Archer_TeamA(Character):
         Character.__init__(self, world, "archer", image)
 
         self.projectile_image = projectile_image
+
+        self.graph = Graph(self)
+        generate_pathfinding_graphs(self, "pathfinding_graph_Anything.txt")
 
         self.base = base
         self.position = position
@@ -46,7 +51,7 @@ class Archer_TeamA(Character):
         level_up_stats = ["hp", "speed", "ranged damage", "ranged cooldown", "projectile range"]
         if self.can_level_up():
             choice = randint(0, len(level_up_stats) - 1)
-            self.level_up(level_up_stats[choice])   
+            self.level_up(level_up_stats[choice])
 
 
 class ArcherStateSeeking_TeamA(State):
@@ -56,7 +61,7 @@ class ArcherStateSeeking_TeamA(State):
         State.__init__(self, "seeking")
         self.archer = archer
 
-        self.archer.path_graph = self.archer.world.paths[randint(0, len(self.archer.world.paths)-1)]
+        self.archer.path_graph = self.archer.paths[randint(0, len(self.archer.paths)-1)]
 
 
     def do_actions(self):
@@ -161,7 +166,7 @@ class ArcherStateKO_TeamA(State):
         if self.archer.current_respawn_time <= 0:
             self.archer.current_respawn_time = self.archer.respawn_time
             self.archer.ko = False
-            self.archer.path_graph = self.archer.world.paths[randint(0, len(self.archer.world.paths)-1)]
+            self.archer.path_graph = self.archer.paths[randint(0, len(self.archer.paths)-1)]
             return "seeking"
             
         return None

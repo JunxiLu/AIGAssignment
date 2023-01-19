@@ -6,6 +6,8 @@ from Graph import *
 from Character import *
 from State import *
 
+from Functions_Anything import *
+
 class Wizard_TeamA(Character):
 
     def __init__(self, world, image, projectile_image, base, position, explosion_image = None):
@@ -13,7 +15,7 @@ class Wizard_TeamA(Character):
         Character.__init__(self, world, "wizard", image)
 
         self.graph = Graph(self)
-        self.generate_pathfinding_graphs("pathfinding_graph_wizard_Anything.txt")
+        generate_pathfinding_graphs(self, "pathfinding_graph_Anything.txt")
 
         self.projectile_image = projectile_image
         self.explosion_image = explosion_image
@@ -59,21 +61,6 @@ class Wizard_TeamA(Character):
                 choice = randint(0, len(level_up_stats) - 1)
             self.level_up(level_up_stats[choice])
 
-    def get_furthest_node(self, position):
-
-        furthest = None
-        for node in self.path_graph.nodes.values():
-            if furthest is None:
-                furthest = node
-                furthest_distance = (position - Vector2(furthest.position)).length()
-            else:
-                distance = (position - Vector2(node.position)).length()
-                if distance > furthest_distance:
-                    furthest = node
-                    furthest_distance = distance
-
-        return furthest
-
     # def collide_obstacle(self):
 
     #     for entity in self.world.entities.values():
@@ -87,7 +74,7 @@ class Wizard_TeamA(Character):
 
     def get_enemy_structure(self, team_id):
 
-        enemy_structure = None
+        enemy_structures = {}
 
         for entity in self.world.entities.values():
 
@@ -98,60 +85,71 @@ class Wizard_TeamA(Character):
             #     if distance > (char.position - entity.position).length():
             #         distance = (char.position - entity.position).length()
             #         nearest_opponent = entity
-            if 1 - entity.team_id == team_id:
-                 enemy_structure = entity
-                 break
+            if 1 - entity.team_id == team_id and (entity.name == "tower" or entity.name == "base"):
+                print(entity.name)
+                enemy_structures[entity.id] = entity
         
-        return enemy_structure
+        return enemy_structures
+    
+    def collide_obstacle(self):
+        # check if colliding with obstacle or base
+        collision_list = pygame.sprite.spritecollide(self, self.world.obstacles, False, pygame.sprite.collide_mask)
+        for entity in collision_list:
+            if entity.team_id == self.team_id:
+                continue
+            elif entity.name == "obstacle" or entity.name == "base":
+                return True
+        
+        return False
     
     # --- Reads a set of pathfinding graphs from a file ---
-    def generate_pathfinding_graphs(self, filename):
+    # def generate_pathfinding_graphs(self, filename):
 
-        f = open(filename, "r")
+    #     f = open(filename, "r")
 
-        # Create the nodes
-        line = f.readline()
-        while line != "connections\n":
-            data = line.split()
-            self.graph.nodes[int(data[0])] = Node(self.graph, int(data[0]), int(data[1]), int(data[2]))
-            line = f.readline()
+    #     # Create the nodes
+    #     line = f.readline()
+    #     while line != "connections\n":
+    #         data = line.split()
+    #         self.graph.nodes[int(data[0])] = Node(self.graph, int(data[0]), int(data[1]), int(data[2]))
+    #         line = f.readline()
 
-        # Create the connections
-        line = f.readline()
-        while line != "paths\n":
-            data = line.split()
-            node0 = int(data[0])
-            node1 = int(data[1])
-            distance = (Vector2(self.graph.nodes[node0].position) - Vector2(self.graph.nodes[node1].position)).length()
-            self.graph.nodes[node0].addConnection(self.graph.nodes[node1], distance)
-            self.graph.nodes[node1].addConnection(self.graph.nodes[node0], distance)
-            line = f.readline()
+    #     # Create the connections
+    #     line = f.readline()
+    #     while line != "paths\n":
+    #         data = line.split()
+    #         node0 = int(data[0])
+    #         node1 = int(data[1])
+    #         distance = (Vector2(self.graph.nodes[node0].position) - Vector2(self.graph.nodes[node1].position)).length()
+    #         self.graph.nodes[node0].addConnection(self.graph.nodes[node1], distance)
+    #         self.graph.nodes[node1].addConnection(self.graph.nodes[node0], distance)
+    #         line = f.readline()
 
-        # Create the orc paths, which are also Graphs
-        self.paths = []
-        line = f.readline()
-        while line != "":
-            path = Graph(self)
-            data = line.split()
+    #     # Create the orc paths, which are also Graphs
+    #     self.paths = []
+    #     line = f.readline()
+    #     while line != "":
+    #         path = Graph(self)
+    #         data = line.split()
             
-            # Create the nodes
-            for i in range(0, len(data)):
-                node = self.graph.nodes[int(data[i])]
-                path.nodes[int(data[i])] = Node(path, int(data[i]), node.position[0], node.position[1])
+    #         # Create the nodes
+    #         for i in range(0, len(data)):
+    #             node = self.graph.nodes[int(data[i])]
+    #             path.nodes[int(data[i])] = Node(path, int(data[i]), node.position[0], node.position[1])
 
-            # Create the connections
-            for i in range(0, len(data)-1):
-                node0 = int(data[i])
-                node1 = int(data[i + 1])
-                distance = (Vector2(self.graph.nodes[node0].position) - Vector2(self.graph.nodes[node1].position)).length()
-                path.nodes[node0].addConnection(path.nodes[node1], distance)
-                path.nodes[node1].addConnection(path.nodes[node0], distance)
+    #         # Create the connections
+    #         for i in range(0, len(data)-1):
+    #             node0 = int(data[i])
+    #             node1 = int(data[i + 1])
+    #             distance = (Vector2(self.graph.nodes[node0].position) - Vector2(self.graph.nodes[node1].position)).length()
+    #             path.nodes[node0].addConnection(path.nodes[node1], distance)
+    #             path.nodes[node1].addConnection(path.nodes[node0], distance)
                 
-            self.paths.append(path)
+    #         self.paths.append(path)
 
-            line = f.readline()
+    #         line = f.readline()
 
-        f.close()
+    #     f.close()
 
 
 class WizardStateSeeking_TeamA(State):
@@ -197,8 +195,14 @@ class WizardStateSeeking_TeamA(State):
             if nearest_opponent.name == "orc" and opponent_distance <= 50:
                 self.wizard.target = nearest_opponent
                 return "fleeing"
-            if (nearest_opponent.name == "tower" or nearest_opponent.name == "base") and opponent_distance <= self.wizard.min_target_distance:
-                self.wizard.target = nearest_opponent
+            # if (nearest_opponent.name == "tower" or nearest_opponent.name == "base") and opponent_distance <= self.wizard.min_target_distance:
+            #     self.wizard.target = nearest_opponent
+            #     self.wizard.velocity = Vector2(0, 0)
+            #     return "attacking"
+        enemy_structures = self.wizard.get_enemy_structure(self.wizard.team_id)
+        for structure in enemy_structures.values():
+            if (self.wizard.position - structure.position).length() <= self.wizard.min_target_distance:
+                self.wizard.target = structure
                 self.wizard.velocity = Vector2(0, 0)
                 return "attacking"
             
@@ -215,13 +219,15 @@ class WizardStateSeeking_TeamA(State):
         
         self.path_length = len(self.path)
 
+        if (self.wizard.collide_obstacle()):
+            self.current_connection = 0
+            self.wizard.move_target.position = self.path[0].fromNode.position
         if (self.path_length > 1):
             self.current_connection = 0
             self.wizard.move_target.position = self.path[1].fromNode.position
         elif (self.path_length > 0):
             self.current_connection = 0
             self.wizard.move_target.position = self.path[0].fromNode.position
-
         else:
             self.wizard.move_target.position = self.wizard.path_graph.nodes[self.wizard.base.target_node_index].position
 
@@ -239,8 +245,8 @@ class WizardStateAttacking_TeamA(State):
         # opponent within range
         if opponent_distance <= self.wizard.min_target_distance:
             if randint(1, 12) == 1:
-                rand_pos_x = [(self.wizard.position.x - randint(15, 20)), (self.wizard.position.x + randint(15, 20))]
-                rand_pos_y = [(self.wizard.position.y - randint(15, 20)), (self.wizard.position.y + randint(15, 20))]
+                rand_pos_x = [(self.wizard.position.x - randint(25, 45)), (self.wizard.position.x + randint(25, 45))]
+                rand_pos_y = [(self.wizard.position.y - randint(25, 45)), (self.wizard.position.y + randint(25, 45))]
                 self.wizard.velocity = Vector2(rand_pos_x[randint(0, 1)], rand_pos_y[randint(0, 1)]) - self.wizard.position
             
             if self.wizard.velocity.length() > 0:
@@ -325,7 +331,7 @@ class WizardStateFleeing_TeamA(State):
     def entry_actions(self):
 
         nearest_node = self.wizard.path_graph.get_nearest_node(self.wizard.position)
-        furthest_node = self.wizard.get_furthest_node(self.wizard.position)
+        furthest_node = get_furthest_node(self.wizard, self.wizard.position)
 
         if nearest_node == self.wizard.path_graph.nodes[self.wizard.base.spawn_node_index]:
             self.path = pathFindAStar(self.wizard.path_graph, \
