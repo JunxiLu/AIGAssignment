@@ -118,10 +118,29 @@ class ArcherStateAttacking_TeamA(State):
 
         # opponent within range
         if opponent_distance <= self.archer.min_target_distance:
-            self.archer.velocity = Vector2(0, 0)
+            if self.archer.target.name == "base" or self.archer.target.name == "tower":
+                self.archer.velocity = Vector2(0, 0)
+            elif self.archer.target.name == "wizard":
+                if opponent_distance <= 140:
+                    self.archer.velocity =  -abs(self.archer.maxSpeed)
+                else:
+                    self.archer.velocity =  Vector2(0, 0)
+            elif self.archer.target.name == "knight":
+                if opponent_distance <= 50:
+                    self.archer.velocity =  -abs(self.archer.maxSpeed)
+                else:
+                    self.archer.velocity =  Vector2(0, 0)
+            else:
+                self.archer.velocity = self.archer.move_target.position - self.archer.position
+                self.archer.velocity.normalize_ip()
+                if opponent_distance <= 50:
+                    self.archer.velocity =  -abs(self.archer.maxSpeed)
+                else:
+                    self.archer.velocity =  Vector2(0, 0)
+
             if self.archer.current_ranged_cooldown <= 0:
                 self.archer.ranged_attack(self.archer.target.position)
-
+        
         else:
             self.archer.velocity = self.archer.target.position - self.archer.position
             if self.archer.velocity.length() > 0:
