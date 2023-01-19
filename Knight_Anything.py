@@ -6,11 +6,16 @@ from Graph import *
 from Character import *
 from State import *
 
+from Functions_Anything import *
+
 class Knight_Anything(Character):
 
     def __init__(self, world, image, base, position):
 
         Character.__init__(self, world, "knight", image)
+
+        self.graph = Graph(self)
+        generate_pathfinding_graphs(self, "pathfinding_graph_Anything.txt")
 
         self.base = base
         self.position = position
@@ -61,7 +66,7 @@ class KnightStateSeeking_Anything(State):
         State.__init__(self, "seeking")
         self.knight = knight
 
-        self.knight.path_graph = self.knight.world.paths[randint(0, len(self.knight.world.paths)-1)]
+        self.knight.path_graph = self.knight.paths[randint(0, len(self.knight.paths)-1)]
 
 
     def do_actions(self):
@@ -164,7 +169,7 @@ class KnightStateKO_Anything(State):
         if self.knight.current_respawn_time <= 0:
             self.knight.current_respawn_time = self.knight.respawn_time
             self.knight.ko = False
-            self.knight.path_graph = self.knight.world.paths[randint(0, len(self.knight.world.paths)-1)]
+            self.knight.path_graph = self.knight.paths[randint(0, len(self.knight.paths)-1)]
             return "seeking"
             
         return None
