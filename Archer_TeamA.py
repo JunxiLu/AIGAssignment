@@ -26,10 +26,12 @@ class Archer_TeamA(Character):
 
         seeking_state = ArcherStateSeeking_TeamA(self)
         attacking_state = ArcherStateAttacking_TeamA(self)
+        fleeing_state = ArcherStateFleeing_TeamA(self)
         ko_state = ArcherStateKO_TeamA(self)
 
         self.brain.add_state(seeking_state)
         self.brain.add_state(attacking_state)
+        self.brain.add_state(fleeing_state)
         self.brain.add_state(ko_state)
 
         self.brain.set_state("seeking")
@@ -120,24 +122,11 @@ class ArcherStateAttacking_TeamA(State):
         if opponent_distance <= self.archer.min_target_distance:
             if self.archer.target.name == "base" or self.archer.target.name == "tower":
                 self.archer.velocity = Vector2(0, 0)
-            elif self.archer.target.name == "wizard":
-                if opponent_distance <= 140:
-                    self.archer.velocity =  -abs(self.archer.maxSpeed)
-                else:
-                    self.archer.velocity =  Vector2(0, 0)
             elif self.archer.target.name == "knight":
                 if opponent_distance <= 50:
-                    self.archer.velocity =  -abs(self.archer.maxSpeed)
+                    return "fleeing"
                 else:
                     self.archer.velocity =  Vector2(0, 0)
-            else:
-                self.archer.velocity = self.archer.move_target.position - self.archer.position
-                self.archer.velocity.normalize_ip()
-                if opponent_distance <= 50:
-                    self.archer.velocity =  -abs(self.archer.maxSpeed)
-                else:
-                    self.archer.velocity =  Vector2(0, 0)
-
             if self.archer.current_ranged_cooldown <= 0:
                 self.archer.ranged_attack(self.archer.target.position)
         
@@ -161,7 +150,34 @@ class ArcherStateAttacking_TeamA(State):
 
         return None
 
+class ArcherStateFleeing_TeamA(State):
 
+    def __init__(self, archer):
+
+        State.__init__(self, "fleeing")
+        self.archer = archer
+
+        self.archer.path_graph = self.archer.world.paths[randint(0, len(self.archer.world.paths)-1)]
+
+    def do_actions(self):
+
+        return None
+
+    def check_conditions(self):
+        opponent_distance = (self.archer.position - self.archer.target.position).length()
+
+        if opponent_distance <= self.archer.min_target_distance:
+            if self.archer.target.name == "knight"or self.archer.target.name == "orc":
+                if opponent_distance > 50:
+                    return "attacking"
+                else:
+                    self.archer.move_target.position = self.archer.path_graph.nodes[self.archer.base.spawn_node_index]
+    
+    def entry_actions(self):
+        
+        return None
+
+                    
 class ArcherStateKO_TeamA(State):
 
     def __init__(self, archer):
