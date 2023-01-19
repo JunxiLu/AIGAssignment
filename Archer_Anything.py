@@ -8,7 +8,7 @@ from State import *
 
 from Functions_Anything import *
 
-class Archer_TeamA(Character):
+class Archer_Anything(Character):
 
     def __init__(self, world, image, projectile_image, base, position):
 
@@ -29,10 +29,10 @@ class Archer_TeamA(Character):
         self.projectile_range = 100
         self.projectile_speed = 100
 
-        seeking_state = ArcherStateSeeking_TeamA(self)
-        attacking_state = ArcherStateAttacking_TeamA(self)
-        fleeing_state = ArcherStateFleeing_TeamA(self)
-        ko_state = ArcherStateKO_TeamA(self)
+        seeking_state = ArcherStateSeeking_Anything(self)
+        attacking_state = ArcherStateAttacking_Anything(self)
+        fleeing_state = ArcherStateFleeing_Anything(self)
+        ko_state = ArcherStateKO_Anything(self)
 
         self.brain.add_state(seeking_state)
         self.brain.add_state(attacking_state)
@@ -56,7 +56,7 @@ class Archer_TeamA(Character):
             self.level_up(level_up_stats[choice])
 
 
-class ArcherStateSeeking_TeamA(State):
+class ArcherStateSeeking_Anything(State):
 
     def __init__(self, archer):
 
@@ -112,7 +112,7 @@ class ArcherStateSeeking_TeamA(State):
             self.archer.move_target.position = self.archer.path_graph.nodes[self.archer.base.target_node_index].position
 
 
-class ArcherStateAttacking_TeamA(State):
+class ArcherStateAttacking_Anything(State):
 
     def __init__(self, archer):
 
@@ -155,7 +155,7 @@ class ArcherStateAttacking_TeamA(State):
 
         return None
 
-class ArcherStateFleeing_TeamA(State):
+class ArcherStateFleeing_Anything(State):
 
     def __init__(self, archer):
 
@@ -183,7 +183,7 @@ class ArcherStateFleeing_TeamA(State):
         return None
 
                     
-class ArcherStateKO_TeamA(State):
+class ArcherStateKO_Anything(State):
 
     def __init__(self, archer):
 

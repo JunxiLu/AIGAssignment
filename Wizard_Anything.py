@@ -8,7 +8,7 @@ from State import *
 
 from Functions_Anything import *
 
-class Wizard_TeamA(Character):
+class Wizard_Anything(Character):
 
     def __init__(self, world, image, projectile_image, base, position, explosion_image = None):
 
@@ -30,10 +30,10 @@ class Wizard_TeamA(Character):
         self.projectile_range = 100
         self.projectile_speed = 100
 
-        seeking_state = WizardStateSeeking_TeamA(self)
-        attacking_state = WizardStateAttacking_TeamA(self)
-        fleeing_state = WizardStateFleeing_TeamA(self)
-        ko_state = WizardStateKO_TeamA(self)
+        seeking_state = WizardStateSeeking_Anything(self)
+        attacking_state = WizardStateAttacking_Anything(self)
+        fleeing_state = WizardStateFleeing_Anything(self)
+        ko_state = WizardStateKO_Anything(self)
 
         self.brain.add_state(seeking_state)
         self.brain.add_state(attacking_state)
@@ -86,7 +86,6 @@ class Wizard_TeamA(Character):
             #         distance = (char.position - entity.position).length()
             #         nearest_opponent = entity
             if 1 - entity.team_id == team_id and (entity.name == "tower" or entity.name == "base"):
-                print(entity.name)
                 enemy_structures[entity.id] = entity
         
         return enemy_structures
@@ -152,7 +151,7 @@ class Wizard_TeamA(Character):
     #     f.close()
 
 
-class WizardStateSeeking_TeamA(State):
+class WizardStateSeeking_Anything(State):
 
     def __init__(self, wizard):
 
@@ -192,18 +191,27 @@ class WizardStateSeeking_TeamA(State):
 
         if nearest_opponent is not None:
             opponent_distance = (self.wizard.position - nearest_opponent.position).length()
-            if nearest_opponent.name == "orc" and opponent_distance <= 50:
+            if (nearest_opponent.name == "orc" or nearest_opponent.name == "knight") and opponent_distance <= 55:
                 self.wizard.target = nearest_opponent
                 return "fleeing"
-            # if (nearest_opponent.name == "tower" or nearest_opponent.name == "base") and opponent_distance <= self.wizard.min_target_distance:
-            #     self.wizard.target = nearest_opponent
-            #     self.wizard.velocity = Vector2(0, 0)
-            #     return "attacking"
+        
         enemy_structures = self.wizard.get_enemy_structure(self.wizard.team_id)
         for structure in enemy_structures.values():
             if (self.wizard.position - structure.position).length() <= self.wizard.min_target_distance:
+                
                 self.wizard.target = structure
-                self.wizard.velocity = Vector2(0, 0)
+                if self.wizard.team_id == 0:
+                    self.wizard.velocity = Vector2(self.wizard.maxSpeed, self.wizard.maxSpeed)
+                else:
+                    self.wizard.velocity = Vector2(-self.wizard.maxSpeed, -self.wizard.maxSpeed)
+                return "attacking"
+            elif structure.name == "base" and (self.wizard.position - self.wizard.path_graph.nodes[self.wizard.base.target_node_index].position).length() <= self.wizard.min_target_distance:
+                
+                self.wizard.target = structure
+                if self.wizard.team_id == 0:
+                    self.wizard.velocity = Vector2(self.wizard.maxSpeed, self.wizard.maxSpeed)
+                else:
+                    self.wizard.velocity = Vector2(-self.wizard.maxSpeed, -self.wizard.maxSpeed)
                 return "attacking"
             
         return None
@@ -221,7 +229,7 @@ class WizardStateSeeking_TeamA(State):
 
         if (self.wizard.collide_obstacle()):
             self.current_connection = 0
-            self.wizard.move_target.position = self.path[0].fromNode.position
+            self.wizard.move_target.position = nearest_node.position
         if (self.path_length > 1):
             self.current_connection = 0
             self.wizard.move_target.position = self.path[1].fromNode.position
@@ -231,7 +239,7 @@ class WizardStateSeeking_TeamA(State):
         else:
             self.wizard.move_target.position = self.wizard.path_graph.nodes[self.wizard.base.target_node_index].position
 
-class WizardStateAttacking_TeamA(State):
+class WizardStateAttacking_Anything(State):
 
     def __init__(self, wizard):
 
@@ -240,21 +248,17 @@ class WizardStateAttacking_TeamA(State):
 
     def do_actions(self):
 
-        opponent_distance = (self.wizard.position - self.wizard.target.position).length()
+        if randint(1, 10) == 1:
+            rand_pos_x = [(self.wizard.position.x - randint(30, 50)), (self.wizard.position.x + randint(30, 50))]
+            rand_pos_y = [(self.wizard.position.y - randint(30, 50)), (self.wizard.position.y + randint(30, 50))]
+            self.wizard.velocity = Vector2(rand_pos_x[randint(0, 1)], rand_pos_y[randint(0, 1)]) - self.wizard.position
+        
+        if self.wizard.velocity.length() > 0:
+            self.wizard.velocity.normalize_ip();
+            self.wizard.velocity *= self.wizard.maxSpeed
 
-        # opponent within range
-        if opponent_distance <= self.wizard.min_target_distance:
-            if randint(1, 12) == 1:
-                rand_pos_x = [(self.wizard.position.x - randint(25, 45)), (self.wizard.position.x + randint(25, 45))]
-                rand_pos_y = [(self.wizard.position.y - randint(25, 45)), (self.wizard.position.y + randint(25, 45))]
-                self.wizard.velocity = Vector2(rand_pos_x[randint(0, 1)], rand_pos_y[randint(0, 1)]) - self.wizard.position
-            
-            if self.wizard.velocity.length() > 0:
-                self.wizard.velocity.normalize_ip();
-                self.wizard.velocity *= self.wizard.maxSpeed
-
-            if self.wizard.current_ranged_cooldown <= 0:
-                self.wizard.ranged_attack(self.wizard.world.graph.nodes[self.wizard.base.target_node_index].position, self.wizard.explosion_image)
+        if self.wizard.current_ranged_cooldown <= 0:
+            self.wizard.ranged_attack(self.wizard.world.graph.nodes[self.wizard.base.target_node_index].position, self.wizard.explosion_image)
 
     def check_conditions(self):
 
@@ -264,17 +268,13 @@ class WizardStateAttacking_TeamA(State):
         if self.wizard.world.get(self.wizard.target.id) is None or self.wizard.target.ko:
             return "fleeing"
 
-        # if (self.wizard.move_target.position - self.wizard.position).length() < 8:
-        #     self.wizard.velocity = Vector2(0, 0)
-        #     return "seeking"
-
-        if opponent_distance > self.wizard.min_target_distance:
+        if (self.wizard.world.graph.nodes[self.wizard.base.target_node_index].position - self.wizard.position).length() > self.wizard.min_target_distance*2-35:
             return "seeking"
 
         nearest_opponent = self.wizard.world.get_nearest_opponent(self.wizard)
         if nearest_opponent is not None:
             opponent_distance = (self.wizard.position - nearest_opponent.position).length()
-            if nearest_opponent.name == "orc" and opponent_distance <= 50:
+            if (nearest_opponent.name == "orc" or nearest_opponent.name == "knight") and opponent_distance <= 55:
                 return "fleeing"
             
         return None
@@ -283,7 +283,7 @@ class WizardStateAttacking_TeamA(State):
 
         return None
 
-class WizardStateFleeing_TeamA(State):
+class WizardStateFleeing_Anything(State):
 
     def __init__(self, wizard):
 
@@ -295,14 +295,10 @@ class WizardStateFleeing_TeamA(State):
 
     def do_actions(self):
 
-        # if randint(1, 20) == 1:
-        #     rand_pos_x = [(self.wizard.move_target.position[0] - randint(20, 30)), (self.wizard.move_target.position[0] + randint(20, 30))]
-        #     rand_pos_y = [(self.wizard.move_target.position[1] - randint(20, 30)), (self.wizard.move_target.position[1] + randint(20, 30))]
-        #     self.wizard.velocity = Vector2(rand_pos_x[randint(0, 1)], rand_pos_y[randint(0, 1)]) - self.wizard.position
         self.wizard.velocity = self.wizard.move_target.position - self.wizard.position
         if self.wizard.velocity.length() > 0:
             self.wizard.velocity.normalize_ip();
-            self.wizard.velocity *= self.wizard.maxSpeed 
+            self.wizard.velocity *= self.wizard.maxSpeed
 
         if self.wizard.current_ranged_cooldown <= 0:
             self.wizard.ranged_attack(self.wizard.target.position, self.wizard.explosion_image)
@@ -318,6 +314,10 @@ class WizardStateFleeing_TeamA(State):
         if opponent_distance > self.wizard.min_target_distance:
             self.wizard.target = None
             return "seeking"
+        
+        nearest_node = self.wizard.path_graph.get_nearest_node(self.wizard.position)
+        if nearest_node == self.wizard.path_graph.nodes[self.wizard.base.spawn_node_index] and (self.wizard.position - nearest_node.position).length()>50:
+            return "fleeing"
 
         if (self.wizard.position - self.wizard.move_target.position).length() < 8:
 
@@ -354,7 +354,7 @@ class WizardStateFleeing_TeamA(State):
         else:
             self.wizard.move_target.position = self.wizard.path_graph.nodes[self.wizard.base.spawn_node_index]
 
-class WizardStateKO_TeamA(State):
+class WizardStateKO_Anything(State):
 
     def __init__(self, wizard):
 
