@@ -47,8 +47,8 @@ class Graph(object):
         # draw the nodes
         for nodeKey in self.nodes:
             pygame.draw.circle(surface, (200, 255, 0), self.nodes[nodeKey].position, 5)
-            font = pygame.font.SysFont("arial", 20)
-            text_surface1 = font.render(str(self.nodes[nodeKey].id), True, (0, 255, 0))
+            font = pygame.font.SysFont("arial", 24)
+            text_surface1 = font.render(str(self.nodes[nodeKey].id), True, (255, 0, 0))
             text_surface2 = font.render(str(self.nodes[nodeKey].position), True, (0, 0, 0))
             surface.blit(text_surface1, text_surface1.get_rect(center=self.nodes[nodeKey].position))
             surface.blit(text_surface2, text_surface2.get_rect(center=(self.nodes[nodeKey].position[0],self.nodes[nodeKey].position[1]+10)))
