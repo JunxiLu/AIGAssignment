@@ -54,7 +54,7 @@ def generate_pathfinding_graphs(self, filename):
 def get_furthest_node(self, position):
 
     furthest = None
-    for node in self.path_graph.nodes.values():
+    for node in self.graph.nodes.values():
         if furthest is None:
             furthest = node
             furthest_distance = (position - Vector2(furthest.position)).length()

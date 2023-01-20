@@ -274,10 +274,6 @@ class WizardStateFleeing_Anything(State):
         if opponent_distance > self.wizard.min_target_distance:
             self.wizard.target = None
             return "seeking"
-        
-        nearest_node = self.wizard.path_graph.get_nearest_node(self.wizard.position)
-        if nearest_node == self.wizard.path_graph.nodes[self.wizard.base.spawn_node_index] and (self.wizard.position - nearest_node.position).length()>50:
-            return "fleeing"
 
         if (self.wizard.position - self.wizard.move_target.position).length() < 8:
 
@@ -285,6 +281,8 @@ class WizardStateFleeing_Anything(State):
             if self.current_connection < self.path_length:
                 self.wizard.move_target.position = self.path[self.current_connection].toNode.position
                 self.current_connection += 1
+            else:
+                return "fleeing"
             
         return None
 
@@ -294,7 +292,7 @@ class WizardStateFleeing_Anything(State):
         furthest_node = get_furthest_node(self.wizard, self.wizard.position)
 
         if nearest_node == self.wizard.path_graph.nodes[self.wizard.base.spawn_node_index]:
-            self.path = pathFindAStar(self.wizard.path_graph, \
+            self.path = pathFindAStar(self.wizard.graph, \
                                     nearest_node, \
                                     furthest_node)
         else:
