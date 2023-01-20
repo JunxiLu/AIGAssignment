@@ -126,7 +126,7 @@ class WizardStateSeeking_Anything(State):
 
         if nearest_opponent is not None:
             opponent_distance = (self.wizard.position - nearest_opponent.position).length()
-            if opponent_distance <= 55:
+            if opponent_distance <= 60:
                 if nearest_opponent.name == "orc" or (nearest_opponent.name == "knight" and nearest_opponent.target == self.wizard):
                     self.wizard.target = nearest_opponent
                     return "fleeing"
@@ -222,7 +222,7 @@ class WizardStateAttacking_Anything(State):
         if nearest_opponent is not None:
             opponent_distance = (self.wizard.position - nearest_opponent.position).length()
             if opponent_distance <= self.wizard.min_target_distance:
-                if opponent_distance <= 55:
+                if opponent_distance <= 60:
                     if nearest_opponent.name == "orc" or (nearest_opponent.name == "knight" and nearest_opponent.target == self.wizard):
                         return "fleeing"
                 else:

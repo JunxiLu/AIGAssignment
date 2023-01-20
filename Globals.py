@@ -1,5 +1,5 @@
-DEBUG = True
-SHOW_PATHS = True
+DEBUG = False
+SHOW_PATHS = False
 SHOW_SPLASH = False
 SPEED_MULTIPLIER = 1.0
 
