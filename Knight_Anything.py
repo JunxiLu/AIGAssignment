@@ -75,6 +75,8 @@ class KnightStateSeeking_Anything(State):
         if self.knight.velocity.length() > 0:
             self.knight.velocity.normalize_ip();
             self.knight.velocity *= self.knight.maxSpeed
+        if self.knight.current_hp <= self.knight.max_hp:
+            self.knight.heal();
 
 
     def check_conditions(self):
