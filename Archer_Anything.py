@@ -96,11 +96,6 @@ class ArcherStateSeeking_Anything(State):
             self.archer.velocity.normalize_ip();
             self.archer.velocity *= self.archer.maxSpeed
 
-        if self.archer.current_ranged_cooldown <= 0:
-            if self.archer.current_hp <= self.archer.max_hp:
-                self.archer.heal();
-
-
     def check_conditions(self):
 
         # check if opponent is in range
@@ -169,12 +164,24 @@ class ArcherStateAttacking_Anything(State):
         #     self.archer.velocity = rand_vec
 
         # opponent within range
-        if randint(1, 2) == 1:
-            # rand_pos_x = [(self.wizard.position.x - randint(40, 60)), (self.wizard.position.x + randint(40, 60))]
-            # rand_pos_y = [(self.wizard.position.y - randint(40, 60)), (self.wizard.position.y + randint(40, 60))]
-            # self.wizard.velocity = Vector2(rand_pos_x[randint(0, 1)], rand_pos_y[randint(0, 1)]) - self.wizard.position
-            rand_vec = [Vector2(randint(60,80), randint(-90,-70)), Vector2(randint(-80,-60), randint(70,90))]
-            self.archer.velocity = rand_vec[randint(0,1)]
+    
+        
+        
+
+    
+
+        if self.archer.pos == 2:
+            if randint(1, 4) == 1:
+                rand_vec = [Vector2(0, randint(-90,-70)), Vector2(0, randint(70,90))]
+                self.archer.velocity = rand_vec[randint(0,1)]
+        elif self.archer.pos == 3:
+            if randint(1, 4) == 1:
+                rand_vec = [Vector2(randint(60,80), 0), Vector2(randint(-80,-60), 0)]
+                self.archer.velocity = rand_vec[randint(0,1)]
+        else:
+            if randint(1, 4) == 1:
+                rand_vec = [Vector2(randint(60,80), randint(-90,-70)), Vector2(randint(-80,-60), randint(70,90))]
+                self.archer.velocity = rand_vec[randint(0,1)]
 
         if self.archer.velocity.length() > 0:
             self.archer.velocity.normalize_ip();
@@ -204,6 +211,18 @@ class ArcherStateAttacking_Anything(State):
             if opponent_distance <= 120:
                 return "fleeing"
 
+        if 40 <= self.archer.position.x <= 855 and 716 <= self.archer.position.y <= 727:
+            self.archer.pos = 2
+
+        if 150 <= self.archer.position.x <= 970 and self.archer.position.y == 50:
+            self.archer.pos = 2
+
+        if 40 <= self.archer.position.x <= 44 and 164 <= self.archer.position.y <= 716:
+            self.archer.pos = 3
+
+        if self.archer.position.x == 970 and 50 <= self.archer.position.y <= 628:
+            self.archer.pos = 3
+
     def entry_actions(self):
 
         return None
@@ -218,22 +237,30 @@ class ArcherStateFleeing_Anything(State):
         self.archer.path_graph = self.archer.world.paths[randint(0, len(self.archer.world.paths)-1)]
 
     def do_actions(self):
+
+        if self.archer.pos == 2:
+            if randint(1, 4) == 1:
+                rand_vec = [Vector2(0, randint(-90,-70)), Vector2(0, randint(70,90))]
+                self.archer.velocity = rand_vec[randint(0,1)]
+        elif self.archer.pos == 3:
+            if randint(1, 4) == 1:
+                rand_vec = [Vector2(randint(60,80), 0), Vector2(randint(-80,-60), 0)]
+                self.archer.velocity = rand_vec[randint(0,1)]
+        else:
+            if randint(1, 4) == 1:
+                rand_vec = [Vector2(randint(60,80), randint(-90,-70)), Vector2(randint(-80,-60), randint(70,90))]
+                self.archer.velocity = rand_vec[randint(0,1)]
         
         if self.archer.target.name == "wizard" or self.archer.target.name == "archer":
-            if randint(1, 3) == 1:
+            if randint(1, 4) == 1:
                 rand_pos_x = [(self.archer.position.x - randint(40, 60)), (self.archer.position.x + randint(40, 60))]
                 rand_pos_y = [(self.archer.position.y - randint(40, 60)), (self.archer.position.y + randint(40, 60))]
                 self.archer.velocity = Vector2(rand_pos_x[randint(0, 1)], rand_pos_y[randint(0, 1)]) - self.archer.position
         else:
             self.archer.velocity = self.archer.move_target.position - self.archer.position
-
-        if self.archer.current_ranged_cooldown <= 0:
-            if self.archer.current_hp <= self.archer.max_hp:
-                self.archer.heal();
-                
+        
         if self.archer.current_ranged_cooldown <= 0:
                 self.archer.ranged_attack(self.archer.target.position)
-
 
 
     def check_conditions(self):
@@ -259,32 +286,45 @@ class ArcherStateFleeing_Anything(State):
             if opponent_distance > 120:
                 return "attacking"
 
+        if 40 <= self.archer.position.x <= 855 and 716 <= self.archer.position.y <= 727:
+            self.archer.pos = 2
+
+        if 150 <= self.archer.position.x <= 970 and self.archer.position.y == 50:
+            self.archer.pos = 2
+
+        if 40 <= self.archer.position.x <= 44 and 164 <= self.archer.position.y <= 716:
+            self.archer.pos = 3
+
+        if self.archer.position.x == 970 and 50 <= self.archer.position.y <= 628:
+            self.archer.pos = 3
+
     
     def entry_actions(self):
-        # nearest_node = self.archer.path_graph.get_nearest_node(self.archer.position)
-        # furthest_node = get_furthest_node(self.archer, self.archer.position)
+        nearest_node = self.archer.path_graph.get_nearest_node(self.archer.position)
+        furthest_node = get_furthest_node(self.archer, self.archer.position)
 
-        # if nearest_node == self.archer.path_graph.nodes[self.archer.base.spawn_node_index]:
-        #     self.path = pathFindAStar(self.archer.graph, \
-        #                             nearest_node, \
-        #                             furthest_node)
-        # else:
-        #     self.path = pathFindAStar(self.archer.path_graph, \
-        #                             nearest_node, \
-        #                             self.archer.path_graph.nodes[self.archer.base.spawn_node_index])
+        if nearest_node == self.archer.path_graph.nodes[self.archer.base.spawn_node_index]:
+            self.path = pathFindAStar(self.archer.graph, \
+                                    nearest_node, \
+                                    furthest_node)
+        else:
+            self.path = pathFindAStar(self.archer.path_graph, \
+                                    nearest_node, \
+                                    self.archer.path_graph.nodes[self.archer.base.spawn_node_index])
 
         
-        # self.path_length = len(self.path)
+        self.path_length = len(self.path)
 
-        # if (self.path_length > 1):s
-        #     self.current_connection = 0
-        #     self.archer.move_target.position = self.path[1].fromNode.position
-        # if (self.path_length > 0):
-        #     self.current_connection = 0
-        #     self.archer.move_target.position = self.path[0].fromNode.position
-        # else:
-        #self.archer.move_target.position = self.archer.path_graph.nodes[self.archer.base.spawn_node_index]
-
+        if (self.path_length > 1):
+            self.current_connection = 0
+            self.archer.move_target.position = self.path[1].fromNode.position
+        if (self.path_length > 0):
+            self.current_connection = 0
+            self.archer.move_target.position = self.path[0].fromNode.position
+        else:
+            self.archer.move_target.position = self.archer.path_graph.nodes[self.archer.base.spawn_node_index]
+        
+        self.archer.retreat = True
         return None
 
                     
