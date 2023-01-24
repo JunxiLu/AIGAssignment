@@ -167,14 +167,25 @@ class ArcherStateAttacking_Anything(State):
     
         
         
+        pos = 1
+        if 40 <= self.archer.position.x <= 855 and 716 <= self.archer.position.y <= 727:
+            pos = 2
 
+        if 150 <= self.archer.position.x <= 970 and self.archer.position.y == 50:
+            pos = 2
+
+        if 40 <= self.archer.position.x <= 44 and 164 <= self.archer.position.y <= 716:
+            pos = 3
+
+        if self.archer.position.x == 970 and 50 <= self.archer.position.y <= 628:
+            pos = 3
     
 
-        if self.archer.pos == 2:
+        if pos == 2:
             if randint(1, 4) == 1:
                 rand_vec = [Vector2(0, randint(-90,-70)), Vector2(0, randint(70,90))]
                 self.archer.velocity = rand_vec[randint(0,1)]
-        elif self.archer.pos == 3:
+        elif pos == 3:
             if randint(1, 4) == 1:
                 rand_vec = [Vector2(randint(60,80), 0), Vector2(randint(-80,-60), 0)]
                 self.archer.velocity = rand_vec[randint(0,1)]
@@ -211,20 +222,8 @@ class ArcherStateAttacking_Anything(State):
             if opponent_distance <= 120:
                 return "fleeing"
 
-        if 40 <= self.archer.position.x <= 855 and 716 <= self.archer.position.y <= 727:
-            self.archer.pos = 2
-
-        if 150 <= self.archer.position.x <= 970 and self.archer.position.y == 50:
-            self.archer.pos = 2
-
-        if 40 <= self.archer.position.x <= 44 and 164 <= self.archer.position.y <= 716:
-            self.archer.pos = 3
-
-        if self.archer.position.x == 970 and 50 <= self.archer.position.y <= 628:
-            self.archer.pos = 3
-
     def entry_actions(self):
-
+        
         return None
 
 class ArcherStateFleeing_Anything(State):
@@ -238,11 +237,24 @@ class ArcherStateFleeing_Anything(State):
 
     def do_actions(self):
 
-        if self.archer.pos == 2:
+        pos = 1
+        if 40 <= self.archer.position.x <= 855 and 716 <= self.archer.position.y <= 727:
+            pos = 2
+
+        if 150 <= self.archer.position.x <= 970 and self.archer.position.y == 50:
+            pos = 2
+
+        if 40 <= self.archer.position.x <= 44 and 164 <= self.archer.position.y <= 716:
+            pos = 3
+
+        if self.archer.position.x == 970 and 50 <= self.archer.position.y <= 628:
+            pos = 3
+
+        if pos == 2:
             if randint(1, 4) == 1:
                 rand_vec = [Vector2(0, randint(-90,-70)), Vector2(0, randint(70,90))]
                 self.archer.velocity = rand_vec[randint(0,1)]
-        elif self.archer.pos == 3:
+        elif pos == 3:
             if randint(1, 4) == 1:
                 rand_vec = [Vector2(randint(60,80), 0), Vector2(randint(-80,-60), 0)]
                 self.archer.velocity = rand_vec[randint(0,1)]
@@ -286,18 +298,6 @@ class ArcherStateFleeing_Anything(State):
             if opponent_distance > 120:
                 return "attacking"
 
-        if 40 <= self.archer.position.x <= 855 and 716 <= self.archer.position.y <= 727:
-            self.archer.pos = 2
-
-        if 150 <= self.archer.position.x <= 970 and self.archer.position.y == 50:
-            self.archer.pos = 2
-
-        if 40 <= self.archer.position.x <= 44 and 164 <= self.archer.position.y <= 716:
-            self.archer.pos = 3
-
-        if self.archer.position.x == 970 and 50 <= self.archer.position.y <= 628:
-            self.archer.pos = 3
-
     
     def entry_actions(self):
         nearest_node = self.archer.path_graph.get_nearest_node(self.archer.position)
@@ -324,7 +324,6 @@ class ArcherStateFleeing_Anything(State):
         else:
             self.archer.move_target.position = self.archer.path_graph.nodes[self.archer.base.spawn_node_index]
         
-        self.archer.retreat = True
         return None
 
                     
