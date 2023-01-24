@@ -182,15 +182,15 @@ class ArcherStateAttacking_Anything(State):
     
 
         if pos == 2:
-            if randint(1, 3) == 1:
+            if randint(1, 6) == 1:
                 rand_vec = [Vector2(0, randint(-90,-70)), Vector2(0, randint(70,90))]
                 self.archer.velocity = rand_vec[randint(0,1)]
         elif pos == 3:
-            if randint(1, 3) == 1:
+            if randint(1, 6) == 1:
                 rand_vec = [Vector2(randint(60,80), 0), Vector2(randint(-80,-60), 0)]
                 self.archer.velocity = rand_vec[randint(0,1)]
         else:
-            if randint(1, 3) == 1:
+            if randint(1, 6) == 1:
                 rand_vec = [Vector2(randint(60,80), randint(-90,-70)), Vector2(randint(-80,-60), randint(70,90))]
                 self.archer.velocity = rand_vec[randint(0,1)]
 
@@ -249,20 +249,20 @@ class ArcherStateFleeing_Anything(State):
             pos = 3
 
         if pos == 2:
-            if randint(1, 3) == 1:
+            if randint(1, 6) == 1:
                 rand_vec = [Vector2(0, randint(-90,-70)), Vector2(0, randint(70,90))]
                 self.archer.velocity = rand_vec[randint(0,1)]
         elif pos == 3:
-            if randint(1, 3) == 1:
+            if randint(1, 6) == 1:
                 rand_vec = [Vector2(randint(60,80), 0), Vector2(randint(-80,-60), 0)]
                 self.archer.velocity = rand_vec[randint(0,1)]
         else:
-            if randint(1, 3) == 1:
+            if randint(1, 6) == 1:
                 rand_vec = [Vector2(randint(60,80), randint(-90,-70)), Vector2(randint(-80,-60), randint(70,90))]
                 self.archer.velocity = rand_vec[randint(0,1)]
         
         if self.archer.target.name == "wizard" or self.archer.target.name == "archer":
-            if randint(1, 3) == 1:
+            if randint(1, 6) == 1:
                 rand_pos_x = [(self.archer.position.x - randint(40, 60)), (self.archer.position.x + randint(40, 60))]
                 rand_pos_y = [(self.archer.position.y - randint(40, 60)), (self.archer.position.y + randint(40, 60))]
                 self.archer.velocity = Vector2(rand_pos_x[randint(0, 1)], rand_pos_y[randint(0, 1)]) - self.archer.position
@@ -297,6 +297,17 @@ class ArcherStateFleeing_Anything(State):
             if opponent_distance > 100:
                 return "attacking"
 
+        if (self.archer.position - self.archer.move_target.position).length() < 8:
+
+            # continue on path
+            if self.current_connection < self.path_length:
+                self.archer.move_target.position = self.path[self.current_connection].toNode.position
+                self.current_connection += 1
+            else:
+                return "fleeing"
+        
+        return None
+
     
     def entry_actions(self):
         nearest_node = self.archer.path_graph.get_nearest_node(self.archer.position)
@@ -323,7 +334,6 @@ class ArcherStateFleeing_Anything(State):
         else:
             self.archer.move_target.position = self.archer.path_graph.nodes[self.archer.base.spawn_node_index]
         
-        return None
 
                     
 class ArcherStateKO_Anything(State):
