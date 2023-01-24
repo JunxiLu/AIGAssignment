@@ -209,12 +209,15 @@ class ArcherStateAttacking_Anything(State):
             return "seeking"
 
         if self.archer.target.name == "knight":
-            if opponent_distance <= 30:
+            if opponent_distance <= 75:
                 return "fleeing"
+        
+        herolist = ['archer', 'wizard']
 
         if self.archer.current_hp <= self.archer.max_hp / 2:
             self.archer.heal();
-            return "fleeing"
+            if self.archer.target.name not in herolist:
+                return "fleeing"
 
         
 
