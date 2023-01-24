@@ -58,6 +58,13 @@ class Knight_Anything(Character):
                 choice = 5
                 self.level_up(level_up_stats[choice])
 
+    def find_wizard(self, knight):
+        ally_wizard = None
+        self.knight = knight
+        for entity in self.knight.world.entities.values():
+            if entity.name == 'wizard' and entity.team_id == self.knight.team_id:
+                ally_wizard = entity
+        return ally_wizard
    
 
 
@@ -74,6 +81,7 @@ class KnightStateSeeking_Anything(State):
     def do_actions(self):
 
         self.knight.velocity = self.knight.move_target.position - self.knight.position
+        
         if self.knight.velocity.length() > 0:
             self.knight.velocity.normalize_ip();
             self.knight.velocity *= self.knight.maxSpeed
@@ -83,6 +91,11 @@ class KnightStateSeeking_Anything(State):
 
     def check_conditions(self):
 
+        ally_wizard = self.knight.find_wizard(self.knight)
+        if self.knight.path_graph != ally_wizard.path_graph:    
+            self.knight.path_graph = ally_wizard.path_graph
+            
+            return "seeking"
         # check if opponent is in range
         nearest_opponent = self.knight.world.get_nearest_opponent(self.knight)
         if nearest_opponent is not None:
@@ -97,12 +110,14 @@ class KnightStateSeeking_Anything(State):
             if self.current_connection < self.path_length:
                 self.knight.move_target.position = self.path[self.current_connection].toNode.position
                 self.current_connection += 1
-            
+       
         return None
+        
 
 
     def entry_actions(self):
 
+        
         nearest_node = self.knight.path_graph.get_nearest_node(self.knight.position)
 
         self.path = pathFindAStar(self.knight.path_graph, \
@@ -148,9 +163,6 @@ class KnightStateAttacking_Anything(State):
             self.knight.target = None
             return "seeking"
         
-        if  self.knight.current_hp <= self.knight.max_hp * 3/10:
-            
-            return "seeking"
         
         if  self.knight.current_hp <= self.knight.max_hp * 3/10 :
             
@@ -174,16 +186,11 @@ class KnightStateFleeing_Anything(State):
 
     def do_actions(self):
 
-        if self.knight.target.name == "archer":
-            if randint(1, 9) == 1:
-                rand_pos_x = [(self.knight.position.x - randint(40, 60)), (self.knight.position.x + randint(40, 60))]
-                rand_pos_y = [(self.knight.position.y - randint(40, 60)), (self.knight.position.y + randint(40, 60))]
-                self.knight.velocity = Vector2(rand_pos_x[randint(0, 1)], rand_pos_y[randint(0, 1)]) - self.knight.position
-            self.knight.heal();
-
-        else:
-            self.knight.velocity = self.knight.move_target.position - self.knight.position
-            self.knight.heal();
+        if randint(1, 9) == 1:
+            rand_pos_x = [(self.knight.position.x - randint(40, 60)), (self.knight.position.x + randint(40, 60))]
+            rand_pos_y = [(self.knight.position.y - randint(40, 60)), (self.knight.position.y + randint(40, 60))]
+            self.knight.velocity = Vector2(rand_pos_x[randint(0, 1)], rand_pos_y[randint(0, 1)]) - self.knight.position
+        self.knight.heal();
 
         if self.knight.velocity.length() > 0:
             self.knight.velocity.normalize_ip();
@@ -193,7 +200,7 @@ class KnightStateFleeing_Anything(State):
     def check_conditions(self):
 
         # target is gone
-        if  self.knight.current_hp == self.knight.max_hp:
+        if  self.knight.current_hp >= self.knight.max_hp *5/10:
             
             return "seeking"
 
