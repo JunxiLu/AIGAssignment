@@ -170,10 +170,11 @@ class ArcherStateAttacking_Anything(State):
                 return "fleeing"
         
         herolist = ['archer', 'wizard']
-        if self.archer.current_hp <= self.archer.max_hp / 2:
-            self.archer.heal();
-            if self.archer.target.name not in herolist:
-                return "fleeing"
+        if self.archer.target.name not in herolist:
+            if self.archer.current_hp <= self.archer.max_hp / 2:
+                self.archer.heal();
+                if self.archer.target.name not in herolist:
+                    return "fleeing"
 
         
 
