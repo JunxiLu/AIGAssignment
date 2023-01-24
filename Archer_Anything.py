@@ -214,6 +214,7 @@ class ArcherStateAttacking_Anything(State):
 
         if self.archer.current_hp <= self.archer.max_hp / 2:
             self.archer.heal();
+            return "fleeing"
 
         
 
@@ -306,6 +307,9 @@ class ArcherStateFleeing_Anything(State):
                 self.current_connection += 1
             else:
                 return "fleeing"
+
+        if self.archer.current_hp <= self.archer.max_hp / 2:
+            self.archer.heal();
         
         return None
 
