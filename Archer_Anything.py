@@ -218,9 +218,7 @@ class ArcherStateAttacking_Anything(State):
             if opponent_distance <= 100:
                 return "fleeing"
         
-        if self.archer.target.name == "wizard":
-            if opponent_distance <= 120:
-                return "fleeing"
+
 
     def entry_actions(self):
         
@@ -270,6 +268,11 @@ class ArcherStateFleeing_Anything(State):
                 self.archer.velocity = Vector2(rand_pos_x[randint(0, 1)], rand_pos_y[randint(0, 1)]) - self.archer.position
         else:
             self.archer.velocity = self.archer.move_target.position - self.archer.position
+
+        if self.archer.velocity.length() > 0:
+            self.archer.velocity.normalize_ip();
+            self.archer.velocity *= self.archer.maxSpeed
+
         
         if self.archer.current_ranged_cooldown <= 0:
                 self.archer.ranged_attack(self.archer.target.position)
@@ -292,10 +295,6 @@ class ArcherStateFleeing_Anything(State):
         # Return attacking only if there is a distance between knight/orc from archer to avoid getting attacked
         if self.archer.target.name == "knight"or self.archer.target.name == "orc":
             if opponent_distance > 100:
-                return "attacking"
-        
-        if self.archer.target.name == "wizard":
-            if opponent_distance > 120:
                 return "attacking"
 
     
