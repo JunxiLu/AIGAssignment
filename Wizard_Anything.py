@@ -223,8 +223,12 @@ class WizardStateAttacking_Anything(State):
             opponent_distance = (self.wizard.position - nearest_opponent.position).length()
             if opponent_distance <= self.wizard.min_target_distance:
                 if opponent_distance <= 60:
-                    if nearest_opponent.name == "orc" or (nearest_opponent.name == "knight" and nearest_opponent.target == self.wizard):
+                    if nearest_opponent.name == "orc" or nearest_opponent.name == "knight":
+                        self.wizard.target = nearest_opponent
                         return "fleeing"
+                    elif (nearest_opponent.name == "archer" or nearest_opponent.name == "wizard") and nearest_opponent.target == self.wizard:
+                         self.wizard.target = nearest_opponent
+                         return "fleeing"                       
                 else:
                     if (nearest_opponent.name == "archer" or nearest_opponent.name == "wizard") and nearest_opponent.target == self.wizard:
                         self.wizard.target = nearest_opponent

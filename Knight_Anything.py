@@ -29,10 +29,12 @@ class Knight_Anything(Character):
 
         seeking_state = KnightStateSeeking_Anything(self)
         attacking_state = KnightStateAttacking_Anything(self)
+        fleeing_state = KnightStateFleeing_Anything(self)
         ko_state = KnightStateKO_Anything(self)
 
         self.brain.add_state(seeking_state)
         self.brain.add_state(attacking_state)
+        self.brain.add_state(fleeing_state)
         self.brain.add_state(ko_state)
 
         self.brain.set_state("seeking")
@@ -145,12 +147,92 @@ class KnightStateAttacking_Anything(State):
         if self.knight.world.get(self.knight.target.id) is None or self.knight.target.ko:
             self.knight.target = None
             return "seeking"
+        
+        if  self.knight.current_hp <= self.knight.max_hp * 3/10:
+            
+            return "seeking"
+        
+        if  self.knight.current_hp <= self.knight.max_hp * 3/10 :
+            
+            return "fleeing"
             
         return None
 
     def entry_actions(self):
 
         return None
+
+class KnightStateFleeing_Anything(State):
+
+    def __init__(self, knight):
+
+        State.__init__(self, "fleeing")
+        self.knight = knight
+
+        self.knight.path_graph = self.knight.paths[randint(0, len(self.knight.paths)-1)]
+        
+
+    def do_actions(self):
+
+        if self.knight.target.name == "archer":
+            if randint(1, 9) == 1:
+                rand_pos_x = [(self.knight.position.x - randint(40, 60)), (self.knight.position.x + randint(40, 60))]
+                rand_pos_y = [(self.knight.position.y - randint(40, 60)), (self.knight.position.y + randint(40, 60))]
+                self.knight.velocity = Vector2(rand_pos_x[randint(0, 1)], rand_pos_y[randint(0, 1)]) - self.knight.position
+            self.knight.heal();
+
+        else:
+            self.knight.velocity = self.knight.move_target.position - self.knight.position
+            self.knight.heal();
+
+        if self.knight.velocity.length() > 0:
+            self.knight.velocity.normalize_ip();
+            self.knight.velocity *= self.knight.maxSpeed
+
+
+    def check_conditions(self):
+
+        # target is gone
+        if  self.knight.current_hp == self.knight.max_hp:
+            
+            return "seeking"
+
+
+        if (self.knight.position - self.knight.move_target.position).length() < 8:
+
+            # continue on path
+            if self.current_connection < self.path_length:
+                self.knight.move_target.position = self.path[self.current_connection].toNode.position
+                self.current_connection += 1
+            
+            
+        return None
+
+    def entry_actions(self):
+
+        nearest_node = self.knight.path_graph.get_nearest_node(self.knight.position)
+        furthest_node = get_furthest_node(self.knight, self.knight.position)
+
+        if nearest_node == self.knight.path_graph.nodes[self.knight.base.spawn_node_index]:
+            self.path = pathFindAStar(self.knight.graph, \
+                                    nearest_node, \
+                                    furthest_node)
+        else:
+            self.path = pathFindAStar(self.knight.path_graph, \
+                                    nearest_node, \
+                                    self.knight.path_graph.nodes[self.knight.base.spawn_node_index])
+
+        
+        self.path_length = len(self.path)
+
+        if (self.path_length > 1):
+            self.current_connection = 0
+            self.knight.move_target.position = self.path[1].fromNode.position
+        if (self.path_length > 0):
+            self.current_connection = 0
+            self.knight.move_target.position = self.path[0].fromNode.position
+        else:
+            self.knight.move_target.position = self.knight.path_graph.nodes[self.knight.base.spawn_node_index]
 
 
 class KnightStateKO_Anything(State):
