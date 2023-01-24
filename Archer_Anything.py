@@ -269,7 +269,7 @@ class ArcherStateFleeing_Anything(State):
             else:
                 if randint(1, 8) == 1:
                     rand_vec = [Vector2(randint(60,80), randint(-90,-70)), Vector2(randint(-80,-60), randint(70,90))]
-                    self.wizard.velocity = rand_vec[randint(0,1)]
+                    self.archer.velocity = rand_vec[randint(0,1)]
         
         else:
             self.archer.velocity = self.archer.move_target.position - self.archer.position
