@@ -65,3 +65,14 @@ def get_furthest_node(self, position):
                 furthest_distance = distance
 
     return furthest
+    
+def collide_obstacle(self):
+    # check if colliding with obstacle or base
+    collision_list = pygame.sprite.spritecollide(self, self.world.obstacles, False, pygame.sprite.collide_mask)
+    for entity in collision_list:
+        if entity.team_id == self.team_id:
+            continue
+        elif entity.name == "obstacle" or entity.name == "base":
+            return True
+    
+    return False

@@ -127,7 +127,13 @@ class KnightStateSeeking_Anything(State):
         
         self.path_length = len(self.path)
 
-        if (self.path_length > 0):
+        if (collide_obstacle(self.knight)):
+            self.current_connection = 0
+            self.knight.move_target.position = nearest_node.position
+        elif (self.path_length > 1):
+            self.current_connection = 0
+            self.knight.move_target.position = self.path[1].fromNode.position
+        elif (self.path_length > 0):
             self.current_connection = 0
             self.knight.move_target.position = self.path[0].fromNode.position
 

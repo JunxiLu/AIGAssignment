@@ -73,18 +73,6 @@ class Wizard_Anything(Character):
                 enemy_structures[entity.id] = entity
         
         return enemy_structures
-    
-    def collide_obstacle(self):
-        # check if colliding with obstacle or base
-        collision_list = pygame.sprite.spritecollide(self, self.world.obstacles, False, pygame.sprite.collide_mask)
-        for entity in collision_list:
-            if entity.team_id == self.team_id:
-                continue
-            elif entity.name == "obstacle" or entity.name == "base":
-                return True
-        
-        return False
-
 
 class WizardStateSeeking_Anything(State):
 
@@ -162,7 +150,7 @@ class WizardStateSeeking_Anything(State):
 
         self.path_length = len(self.path)
 
-        if (self.wizard.collide_obstacle()):
+        if (collide_obstacle(self.wizard)):
             self.current_connection = 0
             self.wizard.move_target.position = nearest_node.position
         if (self.path_length > 1):
