@@ -73,24 +73,6 @@ class ArcherStateSeeking_Anything(State):
 
     def do_actions(self):
 
-        # move = randint(15,30)
-        # lr = randint(1,4)
-        # if lr == 1:
-        #     #rand_vec = Vector2(self.archer.position[0] + move, self.archer.position[1])
-        #     rand_vec = Vector2(randint(60,80), randint(-90,-70))
-        #     self.archer.velocity = rand_vec
-        # if lr == 2:
-        #     #rand_vec = Vector2(self.archer.position[0], self.archer.position[1] + move)
-        #     rand_vec = Vector2(randint(-80,-60), randint(70,90))
-        #     self.archer.velocity = rand_vec
-        # if lr == 3:
-        #     #rand_vec = Vector2(self.archer.position[0] - move, self.archer.position[1])
-        #     rand_vec = Vector2(randint(60,80), randint(-90,-70))
-        #     self.archer.velocity = rand_vec
-        # if lr == 4:
-        #     #rand_vec = Vector2(self.archer.position[0], self.archer.position[1] - move)
-        #     rand_vec = Vector2(randint(-80,-60), randint(70,90))
-        #     self.archer.velocity = rand_vec
 
         self.archer.velocity = self.archer.move_target.position - self.archer.position
         if self.archer.velocity.length() > 0:
@@ -149,31 +131,6 @@ class ArcherStateAttacking_Anything(State):
     def do_actions(self):
 
         opponent_distance = (self.archer.position - self.archer.target.position).length()
-        # move = randint(15,30)
-        # lr = randint(1,4)
-        # if lr == 1:
-        #     #rand_vec = Vector2(self.archer.position[0] + move, self.archer.position[1])
-        #     rand_vec = Vector2(randint(60,80), randint(-90,-70))
-        #     self.archer.velocity = rand_vec
-        # if lr == 2:
-        #     #rand_vec = Vector2(self.archer.position[0], self.archer.position[1] + move)
-        #     rand_vec = Vector2(randint(-80,-60), randint(70,90))
-        #     self.archer.velocity = rand_vec
-        # if lr == 3:
-        #     #rand_vec = Vector2(self.archer.position[0] - move, self.archer.position[1])
-        #     rand_vec = Vector2(randint(60,80), randint(-90,-70))
-        #     self.archer.velocity = rand_vec
-        # if lr == 4:
-        #     #rand_vec = Vector2(self.archer.position[0], self.archer.position[1] - move)
-        #     rand_vec = Vector2(randint(-80,-60), randint(70,90))
-        #     self.archer.velocity = rand_vec
-
-        # opponent within range
-    
-        
-        
-
-    
 
         if self.archer.pos == 2:
             if randint(1, 8) == 1:
@@ -213,7 +170,6 @@ class ArcherStateAttacking_Anything(State):
                 return "fleeing"
         
         herolist = ['archer', 'wizard']
-
         if self.archer.current_hp <= self.archer.max_hp / 2:
             self.archer.heal();
             if self.archer.target.name not in herolist:
@@ -223,6 +179,7 @@ class ArcherStateAttacking_Anything(State):
 
 
     def entry_actions(self):
+        # Determine which location the Archer starts (for both red and blue team)
         if 40 <= self.archer.position.x <= 855 and 716 <= self.archer.position.y <= 727:
             self.archer.pos = 2
 
